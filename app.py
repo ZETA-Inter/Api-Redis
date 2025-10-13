@@ -10,16 +10,8 @@ class StepRequest(BaseModel):
 
 app = FastAPI()
 
-REDIS_HOST = os.getenv("REDIS_HOST", "redis")
-REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
-
-r = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    password=REDIS_PASSWORD,
-    decode_responses=True
-)
+REDIS_URL = os.getenv("REDIS_URL")
+r = redis.from_url(REDIS_URL, decode_responses=True)
 
 @app.get("/get_step")
 def get_step(
@@ -27,11 +19,11 @@ def get_step(
     program_id: int = Query(..., alias="programId")
 ):
     try:
-        key = "worker:"+ str(worker_id) + ":program:" + str(program_id) + ":step"
+        key = f"worker:{worker_id}:program:{program_id}:step"
         retorno = r.get(key)
-        if retorno is None:
-            return {"status": 404, "value": "Chave não encontrada!"}
-        return {"key": key, "value": retorno}
+        if retorno is not None:
+            return {"key": key, "value": retorno}
+        return {"status": 404, "value": "Chave não encontrada!"}
     except Exception as e:
         return {"status": 500, "error": str(e)}
 
@@ -45,4 +37,4 @@ def save_step(request: StepRequest):
         r.set(key, request.step)
         return {"status": "ok"}
     except Exception as e:
-        return {"status": 500, "value": str(e)}
+        return {"status": 500, "error": str(e)}
