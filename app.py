@@ -13,7 +13,7 @@ app = FastAPI()
 REDIS_URL = os.getenv("REDIS_URL")
 r = redis.from_url(REDIS_URL, decode_responses=True)
 
-@app.get("/get_step")
+@app.get("/get-step")
 def get_step(
     worker_id: int = Query(..., alias="workerId"),
     program_id: int = Query(..., alias="programId")
